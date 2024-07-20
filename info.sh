@@ -1,0 +1,1 @@
+nargo compile --force && bb gates -b ./target/noir_string_search.json > target/noir_string_search.txt && grep -i -r 'circuit_size' ./target/noir_string_search.txt
