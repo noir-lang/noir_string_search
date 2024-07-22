@@ -78,9 +78,7 @@ Gate breakdown:
 - 160 gates: constructing a 128 size `u8` array
 - 2,444 gates: string matching algorithm
 
-For a 256 byte needle in a 1,024 byte haystack the cost is 7,633 gates
-
-A rough approximation of costs would be, after setup costs, 7 gates per needle byte and 1 gate per haystack byte
+Some rough measurements:
 
 | Haystack Bytes | Needle Bytes | Total Cost | Cost minus range table and byte array init costs |
 | -------------- | ------------ | ---------- | ------------------------------------------------ |
