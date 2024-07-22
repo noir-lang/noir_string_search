@@ -83,10 +83,10 @@ For a 256 byte needle in a 1,024 byte haystack the cost is 7,633 gates
 A rough approximation of costs would be, after setup costs, 7 gates per needle byte and 1 gate per haystack byte
 
 | Haystack Bytes | Needle Bytes | Total Cost | Cost minus range table and byte array init costs |
-| -------------- | ------------ | ---------- | ------------------------------------------------ | ----- |
+| -------------- | ------------ | ---------- | ------------------------------------------------ |
 | 1,024          | 128          | 6,630      | 2,444                                            |
-| 1,024          | 256          | 7,633      | 3,293                                            | (849) |
+| 1,024          | 256          | 7,633      | 3,293                                            |
 | 2,048          | 128          | 8,471      | 3,011                                            |
-| 2,048          | 256          | 9,474      | 3,854                                            | (843) |
+| 2,048          | 256          | 9,474      | 3,854                                            |
 
 Extrapolating from this table for some very rough estimates: costs for `substring_match` (excluding range table and byte array init costs) are ~6.5 gates per needle byte, ~0.5 gates per haystack byte and a ~1,100 gate constant cost.
