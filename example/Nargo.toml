@@ -1,0 +1,8 @@
+[package]
+name = "example"
+type = "bin"
+authors = [""]
+compiler_version = ">=0.32.0"
+
+[dependencies]
+noir_string_search = { path = "../lib" }
