@@ -151,7 +151,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
 
     fn len(self) -> u32 { self.byte_length }
     fn get(self, idx: Field) -> u8 { self.body[idx] }
-    fn get_body(self) -> [u8] { let x = self.body.as_slice(); println(f"X = {x}"); x }
+    fn get_body(self) -> [u8] { let x = self.body.as_slice(); x }
 
     /**
      * @brief given some `haystack` 31-byte chunks, validate that there exist `num_full_chunks`
@@ -258,7 +258,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         let mut starting_needle_byte_index_of_final_chunk: Field = 0;
         let mut chunk_index_of_final_haystack_chunk_with_matching_needle_bytes: Field = 0;
         let mut num_full_chunks = 0;
-        println("A");
+
         // is there only one haystack chunk that contains needle bytes?
         let merge_initial_final_needle_chunks = lt_f(substring_length as Field, num_bytes_in_first_chunk as Field);
 
@@ -332,7 +332,6 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
             let byte: Field = predicate * (lhs - rhs) + rhs;
             initial_chunk[i] = byte;
         }
-        println("C");
 
         // If `merge_initial_final_needle_chunks = true`, `final_chunk` will contain the full needle data,
         // this requires some complex logic to determine where we are sourcing the needle bytes from.
@@ -370,7 +369,6 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
 
             final_chunk[i] = destination_byte;
         }
-        println("D");
 
         // TODO: moving this above the previous code block adds 31 gates. find out why? :/ 
         let mut initial_needle_chunk: Field = 0;
