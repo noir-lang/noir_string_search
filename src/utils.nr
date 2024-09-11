@@ -32,7 +32,11 @@ unconstrained pub fn search<let N: u32>(
  * @brief validate the body text contains zero-values for all indices >= byte_length
  * @note NOT NEEDED. Consider removing. Values beyond byte_length are not used in matching algorithm so no need to constrain them
  **/
-fn validate_body<let BODYBYTES: u32, let BODYCHUNKS: u32>(data: [u8; BODYBYTES], length: u32, _: [Field; BODYCHUNKS]) {
+fn validate_body<let BODYBYTES: u32, let BODYCHUNKS: u32>(
+    data: [u8; BODYBYTES],
+    length: u32,
+    _: [Field; BODYCHUNKS]
+) {
     // we want a conditional assert for cases where i >= length
     // if i >= length we want to assert that data = 0
     let mut delta: Field = length as Field;
@@ -95,7 +99,7 @@ struct DebugRandomEngine {
 impl DebugRandomEngine {
     unconstrained fn get_random_32_bytes(&mut self) -> [u8; 32] {
         self.seed += 1;
-        let input: [u8; 32] = self.seed.to_be_bytes(32).as_array();
+        let input: [u8; 32] = self.seed.to_be_bytes();
         let hash: [u8; 32] = dep::std::hash::sha256(input);
         hash
     }
@@ -127,4 +131,3 @@ impl DebugRandomEngine {
         result
     }
 }
-
