@@ -213,25 +213,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         for i in 0..InputBytes {
             body[i] = data[i];
         }
-        StringBody { body, chunks: StringBody::compute_chunks(body), byte_length: length }
-    }
-
-    /**
-     * @brief given an input byte array, convert into 31-byte chunks
-     *        cost is ~0.5 gates per byte
-     **/
-    fn compute_chunks(body: [u8; MaxPaddedBytes]) -> [Field; PaddedChunks] {
-        let mut chunks: [Field; PaddedChunks] = [0; PaddedChunks];
-        for i in 0..PaddedChunks {
-            let mut limb: Field = 0;
-            for j in 0..31 {
-                limb *= 256;
-                limb += body[i * 31 + j] as Field;
-            }
-            chunks[i] = limb;
-            std::as_witness(chunks[i]);
-        }
-        chunks
+        StringBody { body, chunks: compute_chunks(body), byte_length: length }
     }
 
     /**
@@ -417,6 +399,23 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         );
         (true, position)
     }
+}
+
+/// Given an input byte array, convert into 31-byte chunks
+/// 
+/// Cost: ~0.5 gates per byte
+fn compute_chunks<let MaxPaddedBytes: u32, let PaddedChunks: u32>(body: [u8; MaxPaddedBytes]) -> [Field; PaddedChunks] {
+    let mut chunks: [Field; PaddedChunks] = [0; PaddedChunks];
+    for i in 0..PaddedChunks {
+        let mut limb: Field = 0;
+        for j in 0..31 {
+            limb *= 256;
+            limb += body[i * 31 + j] as Field;
+        }
+        chunks[i] = limb;
+        std::as_witness(chunks[i]);
+    }
+    chunks
 }
 
 #[test]
