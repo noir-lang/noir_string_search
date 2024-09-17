@@ -28,64 +28,43 @@ unconstrained pub fn search<let N: u32>(
     found_index
 }
 
-/**
- * @brief validate the body text contains zero-values for all indices >= byte_length
- * @note NOT NEEDED. Consider removing. Values beyond byte_length are not used in matching algorithm so no need to constrain them
- **/
-fn validate_body<let BODYBYTES: u32, let BODYCHUNKS: u32>(data: [u8; BODYBYTES], length: u32, _: [Field; BODYCHUNKS]) {
-    // we want a conditional assert for cases where i >= length
-    // if i >= length we want to assert that data = 0
-    let mut delta: Field = length as Field;
-    for i in 0..BODYBYTES {
-        let predicate = lt_f(i as Field, length as Field);
-        let predicate = get_lt_predicate_f(i as Field, length as Field);
-
-        let lt_parameter = 2 * (predicate as Field) * delta - predicate as Field - delta;
-        lt_parameter.assert_max_bit_size(32);
-        delta = delta - 1;
-        std::as_witness(delta);
-
-        // assert that if predicate = 0 then byte = 0
-        assert(data[i] as Field * predicate as Field == data[i] as Field);
-    }
-}
-
 unconstrained fn __conditional_select(lhs: u8, rhs: u8, predicate: bool) -> u8 {
-    let mut result: u8 = 0;
-    if (predicate) {
-        result = lhs;
-    } else {
-        result = rhs;
-    }
-    result
+    if (predicate) { lhs } else { rhs }
 }
 
 pub fn conditional_select<T>(lhs: u8, rhs: u8, predicate: bool) -> u8 {
-    let result = __conditional_select(lhs, rhs, predicate);
-    let result_f = result as Field;
-    let lhs_f = lhs as Field;
-    let rhs_f = rhs as Field;
+    // Safety: This is all just a very verbose `if (predicate) { lhs } else { rhs }`
+    // formulated as `rhs + (lhs - rhs) * predicate`
+    unsafe {
+        let result = __conditional_select(lhs, rhs, predicate);
+        let result_f = result as Field;
+        let lhs_f = lhs as Field;
+        let rhs_f = rhs as Field;
 
-    let diff = lhs_f - rhs_f;
-    std::as_witness(diff);
-    assert((predicate as Field) * (diff) + rhs_f == result_f);
-    result
+        let diff = lhs_f - rhs_f;
+        std::as_witness(diff);
+        assert_eq((predicate as Field) * diff + rhs_f, result_f);
+        result
+    }
 }
 
 unconstrained pub fn get_lt_predicate_f(x: Field, y: Field) -> bool {
     let a = x as u32;
     let b = y as u32;
-    let r = a < b;
-    r
+    a < b
 }
 
 pub fn lt_f(x: Field, y: Field) -> bool {
-    let predicate = get_lt_predicate_f(x, y);
-    let delta = y as Field - x as Field;
-    let lt_parameter = 2 * (predicate as Field) * delta - predicate as Field - delta;
-    lt_parameter.assert_max_bit_size(32);
+    // Safety: As `x` and `y` are known to be valid `u32`s, this function reimplements the
+    // compiler's internal implementation of `lt` 
+    unsafe {
+        let predicate = get_lt_predicate_f(x, y);
+        let delta = y as Field - x as Field;
+        let lt_parameter = 2 * (predicate as Field) * delta - predicate as Field - delta;
+        lt_parameter.assert_max_bit_size(32);
 
-    predicate
+        predicate
+    }
 }
 
 struct DebugRandomEngine {
@@ -95,7 +74,7 @@ struct DebugRandomEngine {
 impl DebugRandomEngine {
     unconstrained fn get_random_32_bytes(&mut self) -> [u8; 32] {
         self.seed += 1;
-        let input: [u8; 32] = self.seed.to_be_bytes(32).as_array();
+        let input: [u8; 32] = self.seed.to_be_bytes();
         let hash: [u8; 32] = dep::std::hash::sha256(input);
         hash
     }

@@ -1,6 +1,6 @@
 mod utils;
 
-use utils::{conditional_select, lt_f, DebugRandomEngine};
+pub use utils::{conditional_select, lt_f, DebugRandomEngine};
 
 /**
  * @brief represents a byte-array of up to MaxBytes, that is used as a "haystack" array,
@@ -149,9 +149,16 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
 
 impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> SubStringTrait for SubString<MaxPaddedBytes, PaddedChunksMinusOne, MaxBytes> {
 
-    fn len(self) -> u32 { self.byte_length }
-    fn get(self, idx: Field) -> u8 { self.body[idx] }
-    fn get_body(self) -> [u8] { let x = self.body.as_slice(); x }
+    fn len(self) -> u32 {
+        self.byte_length
+    }
+    fn get(self, idx: Field) -> u8 {
+        self.body[idx]
+    }
+    fn get_body(self) -> [u8] {
+        let x = self.body.as_slice();
+        x
+    }
 
     /**
      * @brief given some `haystack` 31-byte chunks, validate that there exist `num_full_chunks`
@@ -187,7 +194,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
             let rhs = haystack[predicate as Field * (i as Field + starting_haystack_chunk)];
             assert(predicate * (lhs - rhs) == 0);
         }
-    }   
+    }
 }
 
 // ######################################################
@@ -206,25 +213,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         for i in 0..InputBytes {
             body[i] = data[i];
         }
-        StringBody { body, chunks: StringBody::compute_chunks(body), byte_length: length }
-    }
-
-    /**
-     * @brief given an input byte array, convert into 31-byte chunks
-     *        cost is ~0.5 gates per byte
-     **/
-    fn compute_chunks(body: [u8; MaxPaddedBytes]) -> [Field; PaddedChunks] {
-        let mut chunks: [Field; PaddedChunks] = [0; PaddedChunks];
-        for i in 0..PaddedChunks {
-            let mut limb: Field = 0;
-            for j in 0..31 {
-                limb *= 256;
-                limb += body[i * 31 + j] as Field;
-            }
-            chunks[i] = limb;
-            std::as_witness(chunks[i]);
-        }
-        chunks
+        StringBody { body, chunks: compute_chunks(body), byte_length: length }
     }
 
     /**
@@ -237,12 +226,15 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         // use unconstrained function to determine:
         // a: is the substring present in the body text
         // b: the position of the first match in the body text 
-        let position: u32 = utils::search(
-            self.body,
-            substring.get_body(),
-            self.byte_length,
-            substring.len()
-        );
+        let position: u32 = unsafe {
+            // Safety: The rest of this function checks this.
+            utils::search(
+                self.body,
+                substring.get_body(),
+                self.byte_length,
+                substring.len()
+            )
+        };
 
         assert(
             position + substring.len() <= self.byte_length, "substring not present in main text (match found if a padding text included. is main text correctly formatted?)"
@@ -311,8 +303,8 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         let initial_haystack_chunk = self.chunks[chunk_index];
         let final_haystack_chunk = self.chunks[chunk_index_of_final_haystack_chunk_with_matching_needle_bytes];
 
-        let initial_body_bytes: [u8; 31] = initial_haystack_chunk.to_be_bytes(31).as_array();
-        let final_body_bytes: [u8; 31] = final_haystack_chunk.to_be_bytes(31).as_array();
+        let initial_body_bytes: [u8; 31] = initial_haystack_chunk.to_be_bytes();
+        let final_body_bytes: [u8; 31] = final_haystack_chunk.to_be_bytes();
 
         // When defining the initial chunk bytes, we can represent as Field elements as we are deriving values from known bytes.
         // This saves us a few gates
@@ -407,6 +399,23 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         );
         (true, position)
     }
+}
+
+/// Given an input byte array, convert into 31-byte chunks
+/// 
+/// Cost: ~0.5 gates per byte
+fn compute_chunks<let MaxPaddedBytes: u32, let PaddedChunks: u32>(body: [u8; MaxPaddedBytes]) -> [Field; PaddedChunks] {
+    let mut chunks: [Field; PaddedChunks] = [0; PaddedChunks];
+    for i in 0..PaddedChunks {
+        let mut limb: Field = 0;
+        for j in 0..31 {
+            limb *= 256;
+            limb += body[i * 31 + j] as Field;
+        }
+        chunks[i] = limb;
+        std::as_witness(chunks[i]);
+    }
+    chunks
 }
 
 #[test]
