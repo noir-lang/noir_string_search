@@ -4,7 +4,7 @@ pub use utils::{conditional_select, lt_f, DebugRandomEngine};
 
 /**
  * @brief represents a byte-array of up to MaxBytes, that is used as a "haystack" array,
- *        where we want to validate a substring "needle" is present in the "haystack" 
+ *        where we want to validate a substring "needle" is present in the "haystack"
  * @details the "body" parameter contains some input bytes, zero-padded to the nearest multiple of 31
  *          We pack "bytes" into 31-byte "chunks", as this is the maximum number of bytes we can fit
  *          into a field element without overflowing.
@@ -17,15 +17,15 @@ pub use utils::{conditional_select, lt_f, DebugRandomEngine};
  * @tparam MaxPaddedBytes: the maximum number of bytes after zero-padding to the nearest multiple of 31
  * @tparam PaddedChunks: the number of 31-byte chunks needed to represent MaxPaddedBytes
  **/
-struct StringBody<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> {
-    body: [u8; MaxPaddedBytes],
+pub struct StringBody<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> {
+    pub body: [u8; MaxPaddedBytes],
     chunks: [Field; PaddedChunks],
-    byte_length: u32
+    pub byte_length: u32,
 }
 
 /**
  * @brief represents a byte-array of up to MaxBytes, that is used as a "needle" array,
- *        where we want to validate a substring "needle" is present in the "haystack" 
+ *        where we want to validate a substring "needle" is present in the "haystack"
  * @tparam MaxBytes: the maximum number of bytes that StringBody can contain
  * @tparam MaxPaddedBytes: the maximum number of bytes after zero-padding to the nearest multiple of 31
  * @tparam PaddedChunksMinusOne: the number of 31-byte chunks needed to represent MaxPaddedBytes minus one!
@@ -38,36 +38,36 @@ struct StringBody<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: 
  *       To account for the fact that the 1st and last chunks might have fewer bytes we treat those separately
  *       The param PaddedChunksMinusOne is the number of 31-byte chunks required to represent SubString *EXCLUDING* the initial and final chunks
  */
-struct SubString<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> {
-    body: [u8; MaxPaddedBytes],
-    byte_length: u32
+pub struct SubString<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> {
+    pub body: [u8; MaxPaddedBytes],
+    pub byte_length: u32,
 }
 
-type StringBody32 = StringBody<62, 2, 32>;
-type StringBody64 = StringBody<93, 3, 64>;
-type StringBody128 = StringBody<155, 5, 128>;
-type StringBody256 = StringBody<279, 9, 256>;
-type StringBody512 = StringBody<527, 17, 512>;
-type StringBody1024 = StringBody<1054, 34, 1024>;
-type StringBody2048 = StringBody<2077, 67, 2048>;
-type StringBody4096 = StringBody<4123, 133, 4096>;
-type StringBody8192 = StringBody<8215, 265, 8192>;
-type StringBody16384 = StringBody<16399, 529, 16384>;
+pub type StringBody32 = StringBody<62, 2, 32>;
+pub type StringBody64 = StringBody<93, 3, 64>;
+pub type StringBody128 = StringBody<155, 5, 128>;
+pub type StringBody256 = StringBody<279, 9, 256>;
+pub type StringBody512 = StringBody<527, 17, 512>;
+pub type StringBody1024 = StringBody<1054, 34, 1024>;
+pub type StringBody2048 = StringBody<2077, 67, 2048>;
+pub type StringBody4096 = StringBody<4123, 133, 4096>;
+pub type StringBody8192 = StringBody<8215, 265, 8192>;
+pub type StringBody16384 = StringBody<16399, 529, 16384>;
 
-type SubString32 = SubString<62, 1, 32>;
-type SubString64 = SubString<93, 2, 64>;
-type SubString128 = SubString<155, 4, 128>;
-type SubString256 = SubString<279, 8, 256>;
-type SubString512 = SubString<527, 16, 512>;
-type SubString1024 = SubString<1054, 33, 1024>;
+pub type SubString32 = SubString<62, 1, 32>;
+pub type SubString64 = SubString<93, 2, 64>;
+pub type SubString128 = SubString<155, 4, 128>;
+pub type SubString256 = SubString<279, 8, 256>;
+pub type SubString512 = SubString<527, 16, 512>;
+pub type SubString1024 = SubString<1054, 33, 1024>;
 
-trait SubStringTrait {
+pub trait SubStringTrait {
     fn match_chunks<let HaystackChunks: u32>(
         self,
         haystack: [Field; HaystackChunks],
         num_bytes_in_first_chunk: Field,
         body_chunk_offset: Field,
-        num_full_chunks: Field
+        num_full_chunks: Field,
     );
 
     fn len(self) -> u32;
@@ -100,12 +100,17 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
      * @details each SubString can have different MaxBytes sizes, however we need OtherBytes <= MaxBytes
      *          (use concat_into for cases where this is not the case)
      **/
-    fn concat<let OtherPaddedBytes: u32, let OtherPaddedChunks: u32, let OtherMaxBytes: u32>(self, other: SubString<OtherPaddedBytes, OtherPaddedChunks, OtherMaxBytes>) -> Self {
+    fn concat<let OtherPaddedBytes: u32, let OtherPaddedChunks: u32, let OtherMaxBytes: u32>(
+        self,
+        other: SubString<OtherPaddedBytes, OtherPaddedChunks, OtherMaxBytes>,
+    ) -> Self {
         assert(
-            OtherPaddedBytes <= MaxPaddedBytes, "SubString::concat. SubString being concatted has larger max length. Try calling concat_into"
+            OtherPaddedBytes <= MaxPaddedBytes,
+            "SubString::concat. SubString being concatted has larger max length. Try calling concat_into",
         );
         assert(
-            self.byte_length + other.byte_length <= MaxPaddedBytes, "SubString::concat, concatenated string exceeds MaxPaddedBytes"
+            self.byte_length + other.byte_length <= MaxPaddedBytes,
+            "SubString::concat, concatenated string exceeds MaxPaddedBytes",
         );
         let mut body = self.body;
         let offset: u32 = self.byte_length;
@@ -124,13 +129,15 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
      **/
     fn concat_into<let OtherPaddedBytes: u32, let OtherPaddedChunks: u32, let OtherMaxBytes: u32>(
         self,
-        other: SubString<OtherPaddedBytes, OtherPaddedChunks, OtherMaxBytes>
+        other: SubString<OtherPaddedBytes, OtherPaddedChunks, OtherMaxBytes>,
     ) -> SubString<OtherPaddedBytes, OtherPaddedChunks, OtherMaxBytes> {
         assert(
-            MaxPaddedBytes <= OtherPaddedBytes, "SubString::concat_into. SubString being concat has larger max length. Try calling concat"
+            MaxPaddedBytes <= OtherPaddedBytes,
+            "SubString::concat_into. SubString being concat has larger max length. Try calling concat",
         );
         assert(
-            self.byte_length + other.byte_length <= OtherPaddedBytes, "SubString::concat_into, concatenated string exceeds MaxPaddedBytes"
+            self.byte_length + other.byte_length <= OtherPaddedBytes,
+            "SubString::concat_into, concatenated string exceeds MaxPaddedBytes",
         );
         let mut body: [u8; OtherPaddedBytes] = [0; OtherPaddedBytes];
         for i in 0..MaxBytes {
@@ -170,7 +177,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
         haystack: [Field; HaystackChunks],
         starting_needle_byte: Field,
         starting_haystack_chunk: Field,
-        num_full_chunks: Field
+        num_full_chunks: Field,
     ) {
         let mut substring_chunks: [Field; PaddedChunksMinusOne] = [0; PaddedChunksMinusOne];
         // pack the substring into 31 byte chunks.
@@ -219,25 +226,26 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
     /**
      * @brief Validate a substring exists in the StringBody. Returns a success flag and the position within the StringBody that the match was found
      **/
-    fn substring_match<NeedleSubString>(
-        self,
-        substring: NeedleSubString
-    ) -> (bool, u32) where NeedleSubString : SubStringTrait {
+    fn substring_match<NeedleSubString>(self, substring: NeedleSubString) -> (bool, u32)
+    where
+        NeedleSubString: SubStringTrait,
+    {
         // use unconstrained function to determine:
         // a: is the substring present in the body text
-        // b: the position of the first match in the body text 
+        // b: the position of the first match in the body text
         let position: u32 = unsafe {
             // Safety: The rest of this function checks this.
             utils::search(
                 self.body,
                 substring.get_body(),
                 self.byte_length,
-                substring.len()
+                substring.len(),
             )
         };
 
         assert(
-            position + substring.len() <= self.byte_length, "substring not present in main text (match found if a padding text included. is main text correctly formatted?)"
+            position + substring.len() <= self.byte_length,
+            "substring not present in main text (match found if a padding text included. is main text correctly formatted?)",
         );
         let substring_length = substring.len();
 
@@ -252,16 +260,19 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         let mut num_full_chunks = 0;
 
         // is there only one haystack chunk that contains needle bytes?
-        let merge_initial_final_needle_chunks = lt_f(substring_length as Field, num_bytes_in_first_chunk as Field);
+        let merge_initial_final_needle_chunks =
+            lt_f(substring_length as Field, num_bytes_in_first_chunk as Field);
 
         // if the above is false...
         if (!merge_initial_final_needle_chunks) {
             // compute how many full 31-byte haystack chunks contain 31 needle bytes
             num_full_chunks = (substring_length - num_bytes_in_first_chunk) / 31;
             // for the final haystack chunk that contains needle bytes, where in the needle does this chunk begin?
-            starting_needle_byte_index_of_final_chunk = num_full_chunks as Field * 31 + num_bytes_in_first_chunk as Field;
+            starting_needle_byte_index_of_final_chunk =
+                num_full_chunks as Field * 31 + num_bytes_in_first_chunk as Field;
             // what is the index of the final haystack chunk that contains needle bytes?
-            chunk_index_of_final_haystack_chunk_with_matching_needle_bytes = num_full_chunks as Field + chunk_index as Field + 1;
+            chunk_index_of_final_haystack_chunk_with_matching_needle_bytes =
+                num_full_chunks as Field + chunk_index as Field + 1;
         } else {
             starting_needle_byte_index_of_final_chunk = 0;
             // if the needle bytes does NOT span more than 1 haystack chunk,
@@ -276,32 +287,27 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
             e.g. consider a toy example where we pack 3 bytes into a chunk
             haystack: [VWXZYABCDEQRSTU]
             needle: [ABCDE]
-
-            when constructing needle chunks, we need to align according to where the needle is located in the haystack
+        when constructing needle chunks, we need to align according to where the needle is located in the haystack
             haystack chunks:   [VWX] [ZYA] [BCD] [EQR] [STU]
                                       _..   ...   .__
             processed needle chunks: [ZYA] [BCD] [EQR]
-
-            a "_" symbole means that a chunk byte has been sourced from the haystack bytes,
+        a "_" symbole means that a chunk byte has been sourced from the haystack bytes,
             a "." symbol means a byte is sourced from the needle bytes
-
-            Both the initial and final chunks of the processed needle are "composite" constructions.
+        Both the initial and final chunks of the processed needle are "composite" constructions.
             If chunk byte index < `position` or is > `position + needle length", byte is sourced from haystack, otherwise byte is sourced from needle
-
-            The way we execute this in code is to define an "initial" needle chunk and a "final" needle chunk.
+        The way we execute this in code is to define an "initial" needle chunk and a "final" needle chunk.
             Num needle bytes in initial chunk = position % 31
             Num needle bytes in final chunk = (needle_length - (position % 31)) % 31
-
-            If needle_length < 31 then the "initial" and "final" chunks
+        If needle_length < 31 then the "initial" and "final" chunks
             are actually the *same* chunk and we must perform a merge operation
             (see later in algo for comments)
         */
-
         // instead of directly reading haystack bytes, we derive the bytes from the haystack chunks.
         // This way we don't have to instantiate the haystack bytes as a ROM table, which would cost 2 * haystack.length gates
         let offset_to_first_needle_byte_in_chunk: Field = chunk_offset as Field;
         let initial_haystack_chunk = self.chunks[chunk_index];
-        let final_haystack_chunk = self.chunks[chunk_index_of_final_haystack_chunk_with_matching_needle_bytes];
+        let final_haystack_chunk =
+            self.chunks[chunk_index_of_final_haystack_chunk_with_matching_needle_bytes];
 
         let initial_body_bytes: [u8; 31] = initial_haystack_chunk.to_be_bytes();
         let final_body_bytes: [u8; 31] = final_haystack_chunk.to_be_bytes();
@@ -329,7 +335,8 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         // this requires some complex logic to determine where we are sourcing the needle bytes from.
         // Either they come from the `initial_chunk`, the haystack bytes or the substring bytes.
         for i in 0..31 {
-            let mut lhs_index: Field = starting_needle_byte_index_of_final_chunk as Field + i as Field;
+            let mut lhs_index: Field =
+                starting_needle_byte_index_of_final_chunk as Field + i as Field;
             let predicate = lt_f(lhs_index, substring_length as Field);
 
             /*
@@ -338,8 +345,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
                 | false                             | true      | substring[lhs_idx]       |
                 | true                              | false     | body_bytes[i]            |
                 | true                              | true      | initial_chunk[lhs_index] |
-
-                NOTE: if `merge = true` and `predicate = true`, we read from `initial_chunk` to short-circuit some extra logic.
+            NOTE: if `merge = true` and `predicate = true`, we read from `initial_chunk` to short-circuit some extra logic.
                       if `initial_chunk` did not exist, then we would need to validate whether `i < offset_to_first_needle_byte_in_chunk`.
                       if true, the byte source would be body_bytes, otherwise the source would be substring bytes
             */
@@ -362,7 +368,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
             final_chunk[i] = destination_byte;
         }
 
-        // TODO: moving this above the previous code block adds 31 gates. find out why? :/ 
+        // TODO: moving this above the previous code block adds 31 gates. find out why? :/
         let mut initial_needle_chunk: Field = 0;
         let mut final_needle_chunk: Field = 0;
 
@@ -378,7 +384,9 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         std::as_witness(initial_needle_chunk);
         std::as_witness(final_needle_chunk);
 
-        initial_needle_chunk = merge_initial_final_needle_chunks as Field * (final_needle_chunk - initial_needle_chunk) + initial_needle_chunk;
+        initial_needle_chunk = merge_initial_final_needle_chunks as Field
+            * (final_needle_chunk - initial_needle_chunk)
+            + initial_needle_chunk;
         assert(initial_needle_chunk == initial_haystack_chunk);
         assert(final_needle_chunk == final_haystack_chunk);
 
@@ -395,16 +403,18 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
             self.chunks,
             num_bytes_in_first_chunk as Field,
             body_chunk_offset,
-            num_full_chunks as Field
+            num_full_chunks as Field,
         );
         (true, position)
     }
 }
 
 /// Given an input byte array, convert into 31-byte chunks
-/// 
+///
 /// Cost: ~0.5 gates per byte
-fn compute_chunks<let MaxPaddedBytes: u32, let PaddedChunks: u32>(body: [u8; MaxPaddedBytes]) -> [Field; PaddedChunks] {
+fn compute_chunks<let MaxPaddedBytes: u32, let PaddedChunks: u32>(
+    body: [u8; MaxPaddedBytes],
+) -> [Field; PaddedChunks] {
     let mut chunks: [Field; PaddedChunks] = [0; PaddedChunks];
     for i in 0..PaddedChunks {
         let mut limb: Field = 0;
@@ -420,7 +430,8 @@ fn compute_chunks<let MaxPaddedBytes: u32, let PaddedChunks: u32>(body: [u8; Max
 
 #[test]
 fn test() {
-    let haystack_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".as_bytes();
+    let haystack_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+        .as_bytes();
     let needle_text = " dolor in reprehenderit in voluptate velit esse".as_bytes();
 
     let mut haystack: StringBody512 = StringBody::new(haystack_text, haystack_text.len());
@@ -432,7 +443,8 @@ fn test() {
 
 #[test]
 fn test_small_needle() {
-    let haystack_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".as_bytes();
+    let haystack_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+        .as_bytes();
     let needle_text = "olor".as_bytes();
     let mut haystack: StringBody512 = StringBody::new(haystack_text, haystack_text.len());
     let mut needle: SubString32 = SubString::new(needle_text, needle_text.len());
@@ -455,7 +467,8 @@ fn test_needle_aligned_on_byte_boundary() {
 
 #[test]
 fn test_needle_haystack_equal_size() {
-    let haystack_text = "the quick brown fox jumped over the lazy dog lorem ipsum blahhhh".as_bytes();
+    let haystack_text =
+        "the quick brown fox jumped over the lazy dog lorem ipsum blahhhh".as_bytes();
     let needle_text = "the quick brown fox jumped over the lazy dog lorem ipsum blahhhh".as_bytes();
 
     let mut haystack: StringBody64 = StringBody::new(haystack_text, haystack_text.len());
