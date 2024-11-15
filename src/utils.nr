@@ -1,8 +1,8 @@
-unconstrained pub fn search<let N: u32>(
+pub unconstrained fn search<let N: u32>(
     haystack: [u8; N],
     needle: [u8],
     haystack_length: u32,
-    needle_length: u32
+    needle_length: u32,
 ) -> u32 {
     assert(needle_length > 0, "needle length of size 0 not supported");
     assert(haystack_length > 0, "haystack length of size 0 not supported");
@@ -29,7 +29,11 @@ unconstrained pub fn search<let N: u32>(
 }
 
 unconstrained fn __conditional_select(lhs: u8, rhs: u8, predicate: bool) -> u8 {
-    if (predicate) { lhs } else { rhs }
+    if (predicate) {
+        lhs
+    } else {
+        rhs
+    }
 }
 
 pub fn conditional_select<T>(lhs: u8, rhs: u8, predicate: bool) -> u8 {
@@ -48,7 +52,7 @@ pub fn conditional_select<T>(lhs: u8, rhs: u8, predicate: bool) -> u8 {
     }
 }
 
-unconstrained pub fn get_lt_predicate_f(x: Field, y: Field) -> bool {
+pub unconstrained fn get_lt_predicate_f(x: Field, y: Field) -> bool {
     let a = x as u32;
     let b = y as u32;
     a < b
@@ -56,19 +60,19 @@ unconstrained pub fn get_lt_predicate_f(x: Field, y: Field) -> bool {
 
 pub fn lt_f(x: Field, y: Field) -> bool {
     // Safety: As `x` and `y` are known to be valid `u32`s, this function reimplements the
-    // compiler's internal implementation of `lt` 
+    // compiler's internal implementation of `lt`
     unsafe {
         let predicate = get_lt_predicate_f(x, y);
         let delta = y as Field - x as Field;
         let lt_parameter = 2 * (predicate as Field) * delta - predicate as Field - delta;
-        lt_parameter.assert_max_bit_size(32);
+        lt_parameter.assert_max_bit_size::<32>();
 
         predicate
     }
 }
 
-struct DebugRandomEngine {
-    seed: Field,
+pub struct DebugRandomEngine {
+    pub seed: Field,
 }
 
 impl DebugRandomEngine {
@@ -88,7 +92,7 @@ impl DebugRandomEngine {
         result
     }
 
-    unconstrained fn get_random_bytes<let NBytes: u32>(&mut self) -> [u8; NBytes] {
+    pub unconstrained fn get_random_bytes<let NBytes: u32>(&mut self) -> [u8; NBytes] {
         let num_chunks = (NBytes / 32) + ((NBytes % 32) != 0) as u32;
 
         let mut result: [u8; NBytes] = [0; NBytes];
@@ -106,4 +110,3 @@ impl DebugRandomEngine {
         result
     }
 }
-
