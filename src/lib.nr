@@ -2,6 +2,8 @@ mod utils;
 
 pub use utils::{conditional_select, lt_f, DebugRandomEngine};
 
+use std::collections::bounded_vec::BoundedVec;
+
 /**
  * @brief represents a byte-array of up to MaxBytes, that is used as a "haystack" array,
  *        where we want to validate a substring "needle" is present in the "haystack"
@@ -202,6 +204,15 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
             assert(predicate * (lhs - rhs) == 0);
         }
     }
+}
+
+impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> From<BoundedVec<u8, MaxBytes>> for SubString<MaxPaddedBytes, PaddedChunksMinusOne, MaxBytes> {     
+    fn from(input: BoundedVec<u8, MaxBytes>) -> Self {
+        Self::new(
+            input.storage(),
+            input.len() as u32
+        )
+    }   
 }
 
 // ######################################################
@@ -409,6 +420,15 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
     }
 }
 
+impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> From<BoundedVec<u8, MaxBytes>> for StringBody<MaxPaddedBytes, PaddedChunksMinusOne, MaxBytes> {     
+    fn from(input: BoundedVec<u8, MaxBytes>) -> Self {
+        Self::new(
+            input.storage(),
+            input.len() as u32
+        )
+    }   
+}
+
 /// Given an input byte array, convert into 31-byte chunks
 ///
 /// Cost: ~0.5 gates per byte
@@ -543,4 +563,30 @@ unconstrained fn test_partial_match() {
     let position = utils::search(foo, bar.as_slice(), 1024, 128);
 
     assert(position == 123);
+}
+
+#[test]
+fn test_substring_from_bounded_vec() {
+    let haystack_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+        .as_bytes();
+    let needle_text = " dolor in reprehenderit in voluptate velit esse".as_bytes();
+
+    let mut haystack: StringBody512 = BoundedVec::from(haystack_text).into();
+    let mut needle: SubString64 = BoundedVec::from(needle_text).into();
+
+    let result = haystack.substring_match(needle);
+    assert(result.0 == true);
+}
+
+#[test]
+fn test_string_body_from_bounded_vec() {
+    let haystack_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+        .as_bytes();
+
+    let mut haystack: StringBody512 = BoundedVec::from(haystack_text).into();
+    let needle_text = " dolor in reprehenderit in voluptate velit esse".as_bytes();
+    let mut needle: SubString64 = BoundedVec::from(needle_text).into();
+
+    let result = haystack.substring_match(needle);
+    assert(result.0 == true);
 }
