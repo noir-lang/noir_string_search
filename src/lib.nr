@@ -1,6 +1,6 @@
 mod utils;
 
-pub use utils::{conditional_select, lt_f, DebugRandomEngine};
+pub use utils::{conditional_select, DebugRandomEngine, lt_f};
 
 use std::collections::bounded_vec::BoundedVec;
 
@@ -206,13 +206,10 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
     }
 }
 
-impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> From<BoundedVec<u8, MaxBytes>> for SubString<MaxPaddedBytes, PaddedChunksMinusOne, MaxBytes> {     
+impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> From<BoundedVec<u8, MaxBytes>> for SubString<MaxPaddedBytes, PaddedChunksMinusOne, MaxBytes> {
     fn from(input: BoundedVec<u8, MaxBytes>) -> Self {
-        Self::new(
-            input.storage(),
-            input.len() as u32
-        )
-    }   
+        Self::new(input.storage(), input.len() as u32)
+    }
 }
 
 // ######################################################
@@ -420,13 +417,10 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
     }
 }
 
-impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> From<BoundedVec<u8, MaxBytes>> for StringBody<MaxPaddedBytes, PaddedChunksMinusOne, MaxBytes> {     
+impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> From<BoundedVec<u8, MaxBytes>> for StringBody<MaxPaddedBytes, PaddedChunksMinusOne, MaxBytes> {
     fn from(input: BoundedVec<u8, MaxBytes>) -> Self {
-        Self::new(
-            input.storage(),
-            input.len() as u32
-        )
-    }   
+        Self::new(input.storage(), input.len() as u32)
+    }
 }
 
 /// Given an input byte array, convert into 31-byte chunks
