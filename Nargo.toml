@@ -2,6 +2,6 @@
 name = "noir_string_search"
 type = "lib"
 authors = [""]
-compiler_version = ">=0.36.0"
+compiler_version = ">=1.0.0"
 
 [dependencies]
