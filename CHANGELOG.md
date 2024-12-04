@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/noir-lang/noir_string_search/compare/v0.2.0...v0.3.0) (2024-12-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* update to Noir 0.36.0 ([#10](https://github.com/noir-lang/noir_string_search/issues/10))
+
+### Features
+
+* Update to Noir 0.36.0 ([#10](https://github.com/noir-lang/noir_string_search/issues/10)) ([2fbf54f](https://github.com/noir-lang/noir_string_search/commit/2fbf54f093698e138ba51273ff449290e41e4451))
+
 ## [0.2.0](https://github.com/noir-lang/noir_string_search/compare/v0.1.0...v0.2.0) (2024-10-04)
 
 
