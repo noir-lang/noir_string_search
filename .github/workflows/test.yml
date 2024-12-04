@@ -18,7 +18,7 @@ jobs:
       noir_versions: ${{ steps.get_versions.outputs.versions }}
 
     steps:
-      - name: Checkout sources
+      - name: Get supported Noir versions
         id: get_versions
         run: |         
           # gh returns the Noir releases in reverse chronological order so we keep all releases published after the minimum supported version.
