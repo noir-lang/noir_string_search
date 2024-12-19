@@ -8,7 +8,11 @@ Features:
 - Efficient implementation ~2 gates per haystack byte, ~5 gates per needle byte
 - Both needle and haystack strings can be dynamically constructed in-circuit if required
 
-# Typedefs
+## Noir version compatibility
+
+This library is tested with all Noir stable releases from v0.36.0.
+
+## Typedefs
 
 Multiple type definitions represent different hardcoded maximum lengths for the needle/haystack:
 
@@ -36,7 +40,7 @@ SubString512
 SubString1024
 ```
 
-# Usage
+## Usage
 
 ### Basic usage
 
