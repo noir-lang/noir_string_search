@@ -84,7 +84,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
      * @brief construct a SubString object from an input byte array
      * @details the input byte array must have a number of bytes less than or equal to MaxBytes
      **/
-    fn new<let InputBytes: u32>(input: [u8; InputBytes], input_length: u32) -> Self {
+    pub fn new<let InputBytes: u32>(input: [u8; InputBytes], input_length: u32) -> Self {
         assert(MaxBytes <= MaxPaddedBytes);
         assert(input_length <= MaxBytes);
         assert(InputBytes <= MaxBytes);
@@ -100,7 +100,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
      * @details each SubString can have different MaxBytes sizes, however we need OtherBytes <= MaxBytes
      *          (use concat_into for cases where this is not the case)
      **/
-    fn concat<let OtherPaddedBytes: u32, let OtherPaddedChunks: u32, let OtherMaxBytes: u32>(
+    pub fn concat<let OtherPaddedBytes: u32, let OtherPaddedChunks: u32, let OtherMaxBytes: u32>(
         self,
         other: SubString<OtherPaddedBytes, OtherPaddedChunks, OtherMaxBytes>,
     ) -> Self {
@@ -127,7 +127,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
      * @details each SubString can have different MaxBytes sizes, however we need MaxBytes <= OtherBytes
      *          (use concat for cases where this is not the case)
      **/
-    fn concat_into<let OtherPaddedBytes: u32, let OtherPaddedChunks: u32, let OtherMaxBytes: u32>(
+    pub fn concat_into<let OtherPaddedBytes: u32, let OtherPaddedChunks: u32, let OtherMaxBytes: u32>(
         self,
         other: SubString<OtherPaddedBytes, OtherPaddedChunks, OtherMaxBytes>,
     ) -> SubString<OtherPaddedBytes, OtherPaddedChunks, OtherMaxBytes> {
@@ -213,7 +213,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
      * @brief construct a StringBody object from an input byte array
      * @details the input byte array must have a number of bytes less than or equal to MaxBytes
      **/
-    fn new<let InputBytes: u32>(data: [u8; InputBytes], length: u32) -> Self {
+    pub fn new<let InputBytes: u32>(data: [u8; InputBytes], length: u32) -> Self {
         assert(length <= MaxBytes);
         assert(length <= InputBytes);
         let mut body: [u8; MaxPaddedBytes] = [0; MaxPaddedBytes];
@@ -226,7 +226,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
     /**
      * @brief Validate a substring exists in the StringBody. Returns a success flag and the position within the StringBody that the match was found
      **/
-    fn substring_match<NeedleSubString>(self, substring: NeedleSubString) -> (bool, u32)
+    pub fn substring_match<NeedleSubString>(self, substring: NeedleSubString) -> (bool, u32)
     where
         NeedleSubString: SubStringTrait,
     {
