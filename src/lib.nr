@@ -1,6 +1,6 @@
 mod utils;
 
-pub use utils::{conditional_select, lt_f, DebugRandomEngine};
+pub use utils::{conditional_select, DebugRandomEngine, lt_f};
 
 /**
  * @brief represents a byte-array of up to MaxBytes, that is used as a "haystack" array,
