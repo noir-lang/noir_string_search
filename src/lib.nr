@@ -3,7 +3,6 @@ mod utils;
 pub use utils::{conditional_select, DebugRandomEngine, lt_f};
 use std::collections::bounded_vec::BoundedVec;
 
-
 /**
  * @brief represents a byte-array of up to MaxBytes, that is used as a "haystack" array,
  *        where we want to validate a substring "needle" is present in the "haystack"
@@ -584,6 +583,7 @@ fn test_string_body_from_bounded_vec() {
 
     let result = haystack.substring_match(needle);
     assert(result.0 == true);
+}
 
 #[test]
 fn regression_20() {
