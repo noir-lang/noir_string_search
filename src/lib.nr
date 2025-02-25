@@ -546,7 +546,6 @@ unconstrained fn test_partial_match() {
     assert(position == 123);
 }
 
-
 #[test]
 fn regression_20() {
     let haystack: [u8; 128] = [
