@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/noir-lang/noir_string_search/compare/v0.3.0...v0.3.1) (2025-02-25)
+
+
+### Bug Fixes
+
+* Fixed the out of range index bug ([#21](https://github.com/noir-lang/noir_string_search/issues/21)) ([2e25be4](https://github.com/noir-lang/noir_string_search/commit/2e25be4636ab2111d98d08338fb02ea6f866ca6a))
+
 ## [0.3.0](https://github.com/noir-lang/noir_string_search/compare/v0.2.0...v0.3.0) (2024-12-04)
 
 
