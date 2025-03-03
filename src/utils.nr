@@ -79,7 +79,7 @@ impl DebugRandomEngine {
     unconstrained fn get_random_32_bytes(&mut self) -> [u8; 32] {
         self.seed += 1;
         let input: [u8; 32] = self.seed.to_be_bytes();
-        let hash: [u8; 32] = dep::std::hash::sha256(input);
+        let hash: [u8; 32] = std::hash::blake3(input);
         hash
     }
     unconstrained fn get_random_field(&mut self) -> Field {
