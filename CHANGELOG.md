@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.2](https://github.com/noir-lang/noir_string_search/compare/v0.3.1...v0.3.2) (2025-03-03)
+
+
+### Features
+
+* Added `BoundedVec` type conversion ([#14](https://github.com/noir-lang/noir_string_search/issues/14)) ([0758014](https://github.com/noir-lang/noir_string_search/commit/0758014e7dedf29da9feb0af391f2cd981bc24b0))
+
+
+### Bug Fixes
+
+* Add pub keyword for public methods ([#25](https://github.com/noir-lang/noir_string_search/issues/25)) ([c0a0fc9](https://github.com/noir-lang/noir_string_search/commit/c0a0fc985bc1ea0b37ea2c9cd1e9eb0a041d207a))
+
 ## [0.3.1](https://github.com/noir-lang/noir_string_search/compare/v0.3.0...v0.3.1) (2025-02-25)
 
 
