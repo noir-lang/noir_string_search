@@ -52,25 +52,6 @@ pub fn conditional_select<T>(lhs: u8, rhs: u8, predicate: bool) -> u8 {
     }
 }
 
-pub unconstrained fn get_lt_predicate_f(x: Field, y: Field) -> bool {
-    let a = x as u32;
-    let b = y as u32;
-    a < b
-}
-
-pub fn lt_f(x: Field, y: Field) -> bool {
-    // Safety: As `x` and `y` are known to be valid `u32`s, this function reimplements the
-    // compiler's internal implementation of `lt`
-    unsafe {
-        let predicate = get_lt_predicate_f(x, y);
-        let delta = y as Field - x as Field;
-        let lt_parameter = 2 * (predicate as Field) * delta - predicate as Field - delta;
-        lt_parameter.assert_max_bit_size::<32>();
-
-        predicate
-    }
-}
-
 pub struct DebugRandomEngine {
     pub seed: Field,
 }
