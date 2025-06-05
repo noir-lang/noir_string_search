@@ -1,6 +1,6 @@
 mod utils;
 
-pub use utils::{conditional_select, DebugRandomEngine, lt_f};
+pub use utils::{conditional_select, DebugRandomEngine};
 use std::collections::bounded_vec::BoundedVec;
 
 /**
@@ -66,13 +66,13 @@ pub trait SubStringTrait {
     fn match_chunks<let HaystackChunks: u32>(
         self,
         haystack: [Field; HaystackChunks],
-        num_bytes_in_first_chunk: Field,
-        body_chunk_offset: Field,
-        num_full_chunks: Field,
+        num_bytes_in_first_chunk: u32,
+        body_chunk_offset: u32,
+        num_full_chunks: u32,
     );
 
     fn len(self) -> u32;
-    fn get(self, idx: Field) -> u8;
+    fn get(self, idx: u32) -> u8;
     fn get_body(self) -> [u8];
 }
 
@@ -160,8 +160,8 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
     fn len(self) -> u32 {
         self.byte_length
     }
-    fn get(self, idx: Field) -> u8 {
-        self.body[idx as u32]
+    fn get(self, idx: u32) -> u8 {
+        self.body[idx]
     }
     fn get_body(self) -> [u8] {
         let x = self.body.as_slice();
@@ -176,9 +176,9 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
     fn match_chunks<let HaystackChunks: u32>(
         self,
         haystack: [Field; HaystackChunks],
-        starting_needle_byte: Field,
-        starting_haystack_chunk: Field,
-        num_full_chunks: Field,
+        starting_needle_byte: u32,
+        starting_haystack_chunk: u32,
+        num_full_chunks: u32,
     ) {
         let mut substring_chunks: [Field; PaddedChunksMinusOne] = [0; PaddedChunksMinusOne];
         // pack the substring into 31 byte chunks.
@@ -188,7 +188,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
             let mut slice: Field = 0;
             for j in 0..31 {
                 slice *= 256;
-                let substring_idx = starting_needle_byte as Field + (i as Field * 31) + j as Field;
+                let substring_idx = starting_needle_byte + (i * 31) + j;
                 let mut byte = self.body[substring_idx];
                 slice += byte as Field;
             }
@@ -197,10 +197,10 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
         }
         // iterate over the needle chunks and validate they match the haystack chunks
         for i in 0..PaddedChunksMinusOne {
-            let predicate: Field = lt_f(i as Field, num_full_chunks) as Field;
+            let predicate = i < num_full_chunks;
             let lhs = substring_chunks[i];
-            let rhs = haystack[predicate as Field * (i as Field + starting_haystack_chunk)];
-            assert(predicate * (lhs - rhs) == 0);
+            let rhs = haystack[predicate as u32 * (i + starting_haystack_chunk)];
+            assert(predicate as Field * (lhs - rhs) == 0);
         }
     }
 }
@@ -262,13 +262,12 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         let chunk_offset: u32 = position % 31;
         // how many needle bytes are in 1st haystack chunk?
         let num_bytes_in_first_chunk: u32 = 31 - chunk_offset;
-        let mut starting_needle_byte_index_of_final_chunk: Field = 0;
-        let mut chunk_index_of_final_haystack_chunk_with_matching_needle_bytes: Field = 0;
+        let mut starting_needle_byte_index_of_final_chunk: u32 = 0;
+        let mut chunk_index_of_final_haystack_chunk_with_matching_needle_bytes: u32 = 0;
         let mut num_full_chunks = 0;
 
         // is there only one haystack chunk that contains needle bytes?
-        let merge_initial_final_needle_chunks =
-            lt_f(substring_length as Field, num_bytes_in_first_chunk as Field);
+        let merge_initial_final_needle_chunks = substring_length < num_bytes_in_first_chunk;
 
         // if the above is false...
         if (!merge_initial_final_needle_chunks) {
@@ -276,16 +275,16 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
             num_full_chunks = (substring_length - num_bytes_in_first_chunk) / 31;
             // for the final haystack chunk that contains needle bytes, where in the needle does this chunk begin?
             starting_needle_byte_index_of_final_chunk =
-                num_full_chunks as Field * 31 + num_bytes_in_first_chunk as Field;
+                num_full_chunks * 31 + num_bytes_in_first_chunk;
 
             // what is the index of the final haystack chunk that contains needle bytes?
             chunk_index_of_final_haystack_chunk_with_matching_needle_bytes =
-                num_full_chunks as Field + chunk_index as Field + 1;
+                num_full_chunks + chunk_index + 1;
         } else {
             starting_needle_byte_index_of_final_chunk = 0;
             // if the needle bytes does NOT span more than 1 haystack chunk,
             // the final haystack index will be the same as the initial haystack index
-            chunk_index_of_final_haystack_chunk_with_matching_needle_bytes = chunk_index as Field;
+            chunk_index_of_final_haystack_chunk_with_matching_needle_bytes = chunk_index;
         }
 
         // To minimize the number of comparisons between the haystack bytes and the needle bytes,
@@ -312,7 +311,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         */
         // instead of directly reading haystack bytes, we derive the bytes from the haystack chunks.
         // This way we don't have to instantiate the haystack bytes as a ROM table, which would cost 2 * haystack.length gates
-        let offset_to_first_needle_byte_in_chunk: Field = chunk_offset as Field;
+        let offset_to_first_needle_byte_in_chunk: u32 = chunk_offset;
         let initial_haystack_chunk = self.chunks[chunk_index];
         let final_haystack_chunk =
             self.chunks[chunk_index_of_final_haystack_chunk_with_matching_needle_bytes];
@@ -328,14 +327,18 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
             // if i < offset_to_first_needle_byte_in_chunk, we read from the haystack
             // otherwise we read from the needle
             // n.b. this can be done with an if statement, but the following code produces fewer constraints
-            let idx: Field = i as Field;
-            let predicate: Field = lt_f(i as Field, offset_to_first_needle_byte_in_chunk) as Field;
+            let idx: u32 = i;
+            let predicate = i < offset_to_first_needle_byte_in_chunk;
             let lhs: Field = initial_body_bytes[i] as Field;
             // if i < offset_to_first_needle_byte_in_chunk then `idx - offset_to_first_needle_byte_in_chunk` is negative
             // to ensure we access array correctly we need to set the lookup index to 0 if predicate = 0
-            let substring_idx = (1 - predicate) * (idx - offset_to_first_needle_byte_in_chunk);
+            let substring_idx = if predicate {
+                0
+            } else {
+                idx - offset_to_first_needle_byte_in_chunk
+            };
             let rhs: Field = substring.get(substring_idx) as Field;
-            let byte: Field = predicate * (lhs - rhs) + rhs;
+            let byte: Field = predicate as Field * (lhs - rhs) + rhs;
             initial_chunk[i] = byte;
         }
 
@@ -343,9 +346,8 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         // this requires some complex logic to determine where we are sourcing the needle bytes from.
         // Either they come from the `initial_chunk`, the haystack bytes or the substring bytes.
         for i in 0..31 {
-            let mut lhs_index: Field =
-                starting_needle_byte_index_of_final_chunk as Field + i as Field;
-            let predicate = lt_f(lhs_index, substring_length as Field);
+            let mut lhs_index = starting_needle_byte_index_of_final_chunk + i;
+            let predicate = lhs_index < substring_length;
             /*
                 | merge_initial_final_needle_chunks | predicate | byte_source              |
                 | false                             | false     | body_bytes[i]            |
@@ -356,7 +358,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
                       if `initial_chunk` did not exist, then we would need to validate whether `i < offset_to_first_needle_byte_in_chunk`.
                       if true, the byte source would be body_bytes, otherwise the source would be substring bytes
             */
-            let substring_idx = (predicate as Field) * lhs_index;
+            let substring_idx = (predicate as u32) * lhs_index;
             let byte_from_substring = substring.get(substring_idx) as Field;
             let byte_from_initial_chunk = initial_chunk[i] as Field;
             let byte_from_haystack = final_body_bytes[i] as Field;
@@ -406,12 +408,12 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         //         each loop iteration would also require a predicate, to check whether the byte index was within the needle range or not
         //         Combined these two operations would add about 10 gates per loop iteration,
         //         combined with a 31x iteration length would make this algorithm much more costly than the chunked variant
-        let body_chunk_offset: Field = chunk_index as Field + 1;
+        let body_chunk_offset = chunk_index + 1;
         substring.match_chunks(
             self.chunks,
-            num_bytes_in_first_chunk as Field,
+            num_bytes_in_first_chunk,
             body_chunk_offset,
-            num_full_chunks as Field,
+            num_full_chunks,
         );
         (true, position)
     }
