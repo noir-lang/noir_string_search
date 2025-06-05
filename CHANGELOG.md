@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/noir-lang/noir_string_search/compare/v0.3.2...v0.3.3) (2025-06-05)
+
+
+### Bug Fixes
+
+* Always use u32 when indexing arrays ([#29](https://github.com/noir-lang/noir_string_search/issues/29)) ([d7ab22a](https://github.com/noir-lang/noir_string_search/commit/d7ab22a20d2a0de05cf61c8e4731f3587910321d))
+
 ## [0.3.2](https://github.com/noir-lang/noir_string_search/compare/v0.3.1...v0.3.2) (2025-03-03)
 
 
