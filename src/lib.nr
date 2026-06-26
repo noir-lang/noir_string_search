@@ -164,7 +164,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
         self.body[idx]
     }
     fn get_body(self) -> [u8] {
-        let x = self.body.as_slice();
+        let x = self.body.as_vector();
         x
     }
 
@@ -189,7 +189,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunksMinusOne: u32, let MaxBytes: u32> 
             for j in 0..31 {
                 slice *= 256;
                 let substring_idx = starting_needle_byte + (i * 31) + j;
-                let mut byte = self.body[substring_idx];
+                let byte = self.body[substring_idx];
                 slice += byte as Field;
             }
             std::as_witness(slice);
@@ -240,8 +240,8 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         // use unconstrained function to determine:
         // a: is the substring present in the body text
         // b: the position of the first match in the body text
+        // Safety: The rest of this function checks this.
         let position: u32 = unsafe {
-            // Safety: The rest of this function checks this.
             utils::search(
                 self.body,
                 substring.get_body(),
@@ -346,7 +346,7 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         // this requires some complex logic to determine where we are sourcing the needle bytes from.
         // Either they come from the `initial_chunk`, the haystack bytes or the substring bytes.
         for i in 0..31 {
-            let mut lhs_index = starting_needle_byte_index_of_final_chunk + i;
+            let lhs_index = starting_needle_byte_index_of_final_chunk + i;
             let predicate = lhs_index < substring_length;
             /*
                 | merge_initial_final_needle_chunks | predicate | byte_source              |
@@ -450,8 +450,8 @@ fn test() {
         .as_bytes();
     let needle_text = " dolor in reprehenderit in voluptate velit esse".as_bytes();
 
-    let mut haystack: StringBody512 = StringBody::new(haystack_text, haystack_text.len());
-    let mut needle: SubString64 = SubString::new(needle_text, needle_text.len());
+    let haystack: StringBody512 = StringBody::new(haystack_text, haystack_text.len());
+    let needle: SubString64 = SubString::new(needle_text, needle_text.len());
 
     let result = haystack.substring_match(needle);
     assert(result.0 == true);
@@ -462,8 +462,8 @@ fn test_small_needle() {
     let haystack_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
         .as_bytes();
     let needle_text = "olor".as_bytes();
-    let mut haystack: StringBody512 = StringBody::new(haystack_text, haystack_text.len());
-    let mut needle: SubString32 = SubString::new(needle_text, needle_text.len());
+    let haystack: StringBody512 = StringBody::new(haystack_text, haystack_text.len());
+    let needle: SubString32 = SubString::new(needle_text, needle_text.len());
 
     let result = haystack.substring_match(needle);
     assert(result.0 == true);
@@ -474,8 +474,8 @@ fn test_needle_aligned_on_byte_boundary() {
     let haystack_text = "the quick brown fox jumped over the lazy dog".as_bytes();
     let needle_text = " the lazy dog".as_bytes();
 
-    let mut haystack: StringBody256 = StringBody::new(haystack_text, haystack_text.len());
-    let mut needle: SubString256 = SubString::new(needle_text, needle_text.len());
+    let haystack: StringBody256 = StringBody::new(haystack_text, haystack_text.len());
+    let needle: SubString256 = SubString::new(needle_text, needle_text.len());
 
     let result = haystack.substring_match(needle);
     assert(result.0 == true);
@@ -487,8 +487,8 @@ fn test_needle_haystack_equal_size() {
         "the quick brown fox jumped over the lazy dog lorem ipsum blahhhh".as_bytes();
     let needle_text = "the quick brown fox jumped over the lazy dog lorem ipsum blahhhh".as_bytes();
 
-    let mut haystack: StringBody64 = StringBody::new(haystack_text, haystack_text.len());
-    let mut needle: SubString64 = SubString::new(needle_text, needle_text.len());
+    let haystack: StringBody64 = StringBody::new(haystack_text, haystack_text.len());
+    let needle: SubString64 = SubString::new(needle_text, needle_text.len());
 
     let result = haystack.substring_match(needle);
     assert(result.0 == true);
@@ -551,12 +551,12 @@ fn test_concat_into() {
 #[test]
 unconstrained fn test_partial_match() {
     let mut Engine = DebugRandomEngine { seed: 0 };
-    let mut foo: [u8; 1024] = Engine.get_random_bytes();
+    let foo: [u8; 1024] = Engine.get_random_bytes();
     let mut bar: [u8; 128] = [0; 128];
     for i in 0..128 {
         bar[i] = foo[i + 123];
     }
-    let position = utils::search(foo, bar.as_slice(), 1024, 128);
+    let position = utils::search(foo, bar.as_vector(), 1024, 128);
 
     assert(position == 123);
 }
@@ -567,8 +567,8 @@ fn test_substring_from_bounded_vec() {
         .as_bytes();
     let needle_text = " dolor in reprehenderit in voluptate velit esse".as_bytes();
 
-    let mut haystack: StringBody512 = BoundedVec::from(haystack_text).into();
-    let mut needle: SubString64 = BoundedVec::from(needle_text).into();
+    let haystack: StringBody512 = BoundedVec::from(haystack_text).into();
+    let needle: SubString64 = BoundedVec::from(needle_text).into();
 
     let result = haystack.substring_match(needle);
     assert(result.0 == true);
@@ -579,9 +579,9 @@ fn test_string_body_from_bounded_vec() {
     let haystack_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
         .as_bytes();
 
-    let mut haystack: StringBody512 = BoundedVec::from(haystack_text).into();
+    let haystack: StringBody512 = BoundedVec::from(haystack_text).into();
     let needle_text = " dolor in reprehenderit in voluptate velit esse".as_bytes();
-    let mut needle: SubString64 = BoundedVec::from(needle_text).into();
+    let needle: SubString64 = BoundedVec::from(needle_text).into();
 
     let result = haystack.substring_match(needle);
     assert(result.0 == true);

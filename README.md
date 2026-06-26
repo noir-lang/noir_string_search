@@ -10,7 +10,7 @@ Features:
 
 ## Noir version compatibility
 
-This library is tested with all Noir stable releases from v0.36.0.
+This library is tested with all Noir stable releases from v1.0.0-beta.18.
 
 ## Typedefs
 

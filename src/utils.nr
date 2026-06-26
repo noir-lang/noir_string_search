@@ -29,7 +29,7 @@ pub unconstrained fn search<let N: u32>(
 }
 
 unconstrained fn __conditional_select(lhs: u8, rhs: u8, predicate: bool) -> u8 {
-    if (predicate) {
+    if predicate {
         lhs
     } else {
         rhs
@@ -62,15 +62,6 @@ impl DebugRandomEngine {
         let input: [u8; 32] = self.seed.to_be_bytes();
         let hash: [u8; 32] = std::hash::blake3(input);
         hash
-    }
-    unconstrained fn get_random_field(&mut self) -> Field {
-        let hash = self.get_random_32_bytes();
-        let mut result: Field = 0;
-        for i in 0..32 {
-            result *= 256;
-            result += hash[i] as Field;
-        }
-        result
     }
 
     pub unconstrained fn get_random_bytes<let NBytes: u32>(&mut self) -> [u8; NBytes] {
