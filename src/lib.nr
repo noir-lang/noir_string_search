@@ -250,6 +250,21 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
             )
         };
 
+        self.substring_match_at(substring, position)
+    }
+
+    /**
+     * @brief Verify that `substring` occurs in the StringBody at the given `position`.
+     * @details This is the constrained core of `substring_match`.
+     **/
+    fn substring_match_at<NeedleSubString>(
+        self,
+        substring: NeedleSubString,
+        position: u32,
+    ) -> (bool, u32)
+    where
+        NeedleSubString: SubStringTrait,
+    {
         assert(
             position + substring.len() <= self.byte_length,
             "substring not present in main text (match found if a padding text included. is main text correctly formatted?)",
@@ -345,9 +360,10 @@ impl<let MaxPaddedBytes: u32, let PaddedChunks: u32, let MaxBytes: u32> StringBo
         // If `merge_initial_final_needle_chunks = true`, `final_chunk` will contain the full needle data,
         // this requires some complex logic to determine where we are sourcing the needle bytes from.
         // Either they come from the `initial_chunk`, the haystack bytes or the substring bytes.
+        let merge_offset = (merge_initial_final_needle_chunks as u32) * chunk_offset;
         for i in 0..31 {
             let lhs_index = starting_needle_byte_index_of_final_chunk + i;
-            let predicate = lhs_index < substring_length;
+            let predicate = (i >= merge_offset) & (lhs_index < merge_offset + substring_length);
             /*
                 | merge_initial_final_needle_chunks | predicate | byte_source              |
                 | false                             | false     | body_bytes[i]            |
@@ -611,4 +627,17 @@ fn regression_20() {
     let pk_needle: SubString32 = SubString::new(needle, needle_len);
     let (result, _): (bool, u32) = id_haystack.substring_match(pk_needle);
     assert(result);
+}
+
+#[test(should_fail)]
+fn does_not_incorrectly_accept_substring_that_fits_in_a_single_chunk() {
+    let haystack_text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".as_bytes();
+    // "BCE" does NOT occur in the haystack ("BCD" sits at position 1).
+    let forged_needle_text = "BCE".as_bytes();
+
+    let haystack: StringBody64 = StringBody::new(haystack_text, haystack_text.len());
+    let forged_needle: SubString32 = SubString::new(forged_needle_text, forged_needle_text.len());
+
+    // This is not true so it should produce an assertion failure
+    let _ = haystack.substring_match_at(forged_needle, 1);
 }
