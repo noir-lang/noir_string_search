@@ -1,5 +1,10 @@
 # noir_string_search
 
+> [!WARNING]
+> **This library is experimental software. It has not been fully audited and is not guaranteed to be secure. Expect bugs!**
+>
+> noir_string_search is provided "as is", without warranty of any kind (see [LICENSE](LICENSE)). Bugs in this library can lead to under-constrained circuits, allowing invalid proofs to be accepted. Do not rely on it to protect real assets or sensitive data without your own independent review.
+
 A noir library that can be used to prove that a given "needle" substring is present within a larger "haystack" string.
 
 Features:
